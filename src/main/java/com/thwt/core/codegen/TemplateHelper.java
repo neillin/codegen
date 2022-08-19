@@ -1,0 +1,178 @@
+package com.thwt.core.codegen;
+
+import static com.thwt.core.codegen.util.Utils.*;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.velocity.VelocityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+
+
+
+public class TemplateHelper {
+
+	public static final String PREFIX = ">>>>>>>";
+	public static final String SUFFIX = "<<<<<<<";
+
+	private Logger logger = LoggerFactory.getLogger("TEMPLATE");
+
+	private final VelocityContext context;
+
+	public TemplateHelper(VelocityContext context) {
+		this.context = context;
+	}
+
+	public Map<String, Object> getExtra() {
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		map.put("r", "\r");
+		map.put("n", "\n");
+		map.put("t", "\t");
+
+		return map;
+	}
+
+	public String join(String separator, List<String> parts) {
+		StringBuilder sb = new StringBuilder();
+		boolean isEmpty = true;
+
+		for (String part : parts) {
+			if (!isBlank(part)) {
+				if (!isEmpty) {
+					sb.append(separator);
+				}
+				sb.append(part);
+				isEmpty = false;
+			}
+		}
+
+		return sb.toString();
+	}
+
+	public String insight() {
+		String keys = Arrays.toString(context.getKeys());
+		int depth = context.getCurrentMacroCallDepth();
+		String macro = context.getCurrentMacroName();
+		List<?> macros = context.getMacroLibraries();
+		String macroStack = Arrays.toString(context.getMacroNameStack());
+		String info = "INTROSPECTION {\n  keys:%s\n  depth:%s\n  macro:%s\n  macros:%s\n  macroStack:%s\n}";
+		return String.format(info, keys, depth, macro, macros, macroStack);
+	}
+
+	public String locate(String templateName) {
+		return templateName + ".vm";
+	}
+
+	public String fileMark(String filename) {
+		return String.format("%s %s %s", PREFIX, filename,
+				SUFFIX);
+	}
+
+	public boolean isInstanceOf(Object value, String className)
+			throws ClassNotFoundException {
+		return Class.forName(className).isInstance(value);
+	}
+
+	public String indent(String code, String prefix) {
+
+		StringBuilder sb = new StringBuilder();
+		int[] cnt = {0};
+		for(String line :Splitter.on('\n').split(code)) {
+			if(cnt[0] > 0) {
+				sb.append("\n");
+			}
+			if (!CharMatcher.whitespace().matchesAllOf(line)) {
+				line = prefix + line;
+			}
+			sb.append(line);
+			cnt[0]++;
+		};
+		return sb.toString();
+	}
+
+	public String capitalize(String content){
+		if((content == null)||(content.length() == 0)){
+			return content;
+		}
+		StringBuffer buf = new StringBuffer(content);
+		buf.setCharAt(0,Character.toUpperCase(content.charAt(0)));
+		return buf.toString();	
+	}
+	public String uncapitalize(String content){
+		if((content == null)||(content.length() == 0)){
+			return content;
+		}
+		StringBuffer buf = new StringBuffer(content);
+		buf.setCharAt(0,Character.toLowerCase(content.charAt(0)));
+		return buf.toString();	
+	}
+	
+	public void setAttributes(Map<String, ? extends Object> attributes) {
+		for (Entry<String, ? extends Object> entry : attributes.entrySet()) {
+			context.put(entry.getKey(), entry.getValue());
+		}
+	}
+
+	public void removeAttributes(Map<String, ? extends Object> attributes) {
+		for (String key : attributes.keySet()) {
+			context.remove(key);
+		}
+	}
+
+	public String info(String msg) {
+		logger.info(msg);
+		return "";
+	}
+
+	public String debug(String msg) {
+		logger.debug(msg);
+		return "";
+	}
+	public String toCursorType(String type){
+		if (type==null) {
+			return "String";
+		}
+		if (type.equals("Boolean")||type.equals("Byte")||type.equals("Short")) {
+			return "Short";
+		}else if (type.equals("Int")) {
+			return "Int";
+		}else if(type.equals("Long")){
+			return "Long";
+		}else if(type.equals("Float")){
+			return "Float";
+		}else if(type.equals("Double")){
+			return "Double";
+		}else if(type.equals("ByteArray")){
+			return "Blob";
+		}else if(type.equals("Date")){
+			return "Long";
+		}else{
+			return "String";
+		}
+
+	}
+	public String toBindType(String type){
+		if (type==null) {
+			return "String";
+		}
+		if (type.equals("Boolean")||type.equals("Byte")||type.equals("Short")||type.equals("Int")||type.equals("Long")) {
+			return "Long";
+		}else if(type.equals("Float")||type.equals("Double")){
+			return "Double";
+		}else if(type.equals("ByteArray")){
+			return "Blob";
+		}else if(type.equals("Date")){
+			return "Long";
+		}else{
+			return "String";
+		}
+	}
+}

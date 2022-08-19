@@ -1,0 +1,31 @@
+
+#macro(getter $model)
+    /**
+     * @return the ${model.name}
+     */
+    @Generated
+    public ${model.simpleCanonicalType} get${helper.capitalize($model.name)}() {
+        return ${model.name};
+    }
+#end
+
+#macro(setter $model)
+    /**
+     * @param ${model.name} the ${model.name} to set
+     */
+    @Generated
+    public void set${helper.capitalize($model.name)}($model.simpleCanonicalType $model.name) {
+#if(${model.bindable})    
+        $model.simpleCanonicalType old = this.${model.name};
+#end
+        this.${model.name} = $model.name;
+#if(${model.bindable})    
+#if(${model.decorated})
+        if(this.${model.name} != null){
+            this.${model.name} = new ${model.decoratedType}("${model.name}", this.emitter,this.${model.name});
+        }
+#end        
+        emitter.firePropertyChange("${model.name}", old, this.${model.name});
+#end
+    }
+#end
