@@ -1,0 +1,23 @@
+new AbstractInjectionPoint<GenericDAO<${clazz}>>(GenericDAO.Helper.ofClass(${clazz}.class)) {
+	
+	      @Override
+      protected GenericDAO<${clazz}> getValue(final InjectionContext context,
+          final Class<GenericDAO<${clazz}>> clazz) {
+		return DAOFactory.getGenericDAO4Entity(${clazz}.class);
+      }
+	
+	  @Override
+	  protected void injectValue(GenericDAO<${clazz}> value) {
+	    ${model.generateInjectStatement('targetObject','value')};
+	  }
+	
+	  @Override
+	  protected void uninjectValue() {
+	    ${model.generateInjectStatement('targetObject','null')};
+	  }
+	  
+	  @Override
+	  public String toString() {
+	    return "Injection point of [${model.target.targetObject.name}] in module :"+getModuleId();
+	  }
+	};

@@ -1,0 +1,209 @@
+
+#macro(getter $model)
+    /**
+     * @return the ${model.name}
+     */
+    public ${model.simpleCanonicalType} get${helper.capitalize($model.name)}() {
+        return ${model.name};
+    }
+#end
+
+#macro(setter $model)
+    /**
+     * @param ${model.name} the ${model.name} to set
+     */
+    public void set${helper.capitalize($model.name)}($model.simpleCanonicalType $model.name) {
+        this.${model.name} = $model.name;
+    }
+#end
+
+#macro(valueFieldFromJson $fld)
+#if($fld.mappingProperties)
+     IJsonObject jsonObj = json.getJsonObject("${fld.mappingName}");
+     if(jsonObj != null) {
+        ${fld.type.simpleName} retVal = JsonConverter.Factory.loadObject(${fld.type.simpleName}.class, JsonHelper.fromJsonObject(jsonObj, "${fld.keyProperty.mappingName}", ${fld.keyProperty.type.simpleName}.class, null));
+     	if(retVal != null) {
+     	   obj.${fld.setterMethod}(retVal);
+     	}
+     }
+#else
+     obj.${fld.setterMethod}(JsonHelper.fromJsonObject(json, "${fld.mappingName}", ${fld.type.simpleName}.class, null));
+#end
+#end
+
+#macro(oldvalueFieldFromJson $fld)
+#if($fld.isEnum())
+          if (value instanceof String) {
+            obj.${fld.setterMethod}(${fld.type.simpleName}.valueOf((String)value));
+          }else if(value == null) {
+            obj.${fld.setterMethod}(null);
+          }
+#elseif($fld.isDate())
+          if (value instanceof Long) {
+            obj.${fld.setterMethod}(new Date((Long)value));
+          }else if(value == null) {
+            obj.${fld.setterMethod}(null);
+          }
+#elseif($fld.isJsonifiable())
+          if (value instanceof IJsonObject) {
+            obj.${fld.setterMethod}(JsonHelper.fromJsonObject(json, "${fld.mappingName}", ${fld.type.simpleName}.class, null));
+          }else if(value == null) {
+            obj.${fld.setterMethod}(null);
+          }
+#else
+#if($fld.isArray() && !$fld.isByteArray())
+#if(${helper.getPrimitiveArrayFromJsonMethod(${fld.type})})
+            if (value instanceof IJsonArray) {
+              obj.${fld.setterMethod}(JsonHelper.${helper.getPrimitiveArrayFromJsonMethod(${fld.type})}((IJsonArray)value));
+            }else{
+              obj.${fld.setterMethod}(null);
+            }
+#else
+            if (value instanceof IJsonArray) {
+              obj.${fld.setterMethod}(JsonHelper.fromJsonArray((JsonArray)value, ${fld.type.componentType.simpleName}.class, new ${fld.type.componentType.simpleName}[((IJsonArray)value).size()]));
+            }else{
+              obj.${fld.setterMethod}(null);
+            }
+#end
+#else
+#if($fld.isPrimitive())
+          if (value instanceof ${fld.boxedType.simpleName}) {
+              obj.${fld.setterMethod}((${fld.boxedType.simpleName})value);
+#if(${fld.type.simpleName}!="String")              
+          }else if(value != null) {
+            obj.${fld.setterMethod}(JsonHelper.parseValue(${fld.boxedType.simpleName}.class, value.toString()));
+#end            
+          }
+#elseif($fld.isByteArray())
+		  if (value instanceof String) {
+              obj.${fld.setterMethod}(json.getBinary("${fld.mappingName}"));
+          }else if(value == null) {
+            obj.${fld.setterMethod}(null);
+          }
+#else
+          if (value instanceof ${fld.type.simpleName}) {
+              obj.${fld.setterMethod}((${fld.type.simpleName})value);
+#if(${fld.type.simpleName}!="String")
+          }else if(value != null) {
+            obj.${fld.setterMethod}(JsonHelper.parseValue(${fld.type.simpleName}.class, value.toString()));
+#end
+          }else {
+            obj.${fld.setterMethod}(null);
+          }
+#end
+#end
+#end
+#end
+
+#macro(listFieldFromJson $fld)
+##            if (value instanceof IJsonArray) {
+            #if($fld.adderMethod)
+                JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new Consumer<${fld.type.simpleName}>() {
+
+                  @Override
+                  public void accept(${fld.type.simpleName} value) {
+                    obj.${fld.adderMethod}(value);
+                  }
+                  
+                });
+            #else
+                obj.${fld.setterMethod}(JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new ArrayList<${fld.type.simpleName}>()));
+            #end
+##             } else {
+##                obj.${fld.setterMethod}(null);
+##            }
+#end
+
+
+#macro(setFieldFromJson $fld)
+##            if (value instanceof IJsonArray) {
+            #if($fld.adderMethod)
+                JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new Consumer<${fld.type.simpleName}>() {
+
+                  @Override
+                  public void accept(${fld.type.simpleName} value) {
+                    obj.${fld.adderMethod}(value);
+                  }
+                  
+                });
+            #else
+                obj.${fld.setterMethod}(JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new HashSet<${fld.type.simpleName}>()));
+            #end
+##            } else {
+##                obj.${fld.setterMethod}(null);
+##            }
+#end
+
+#macro(mapFieldFromJson $fld)
+##            if (value instanceof IJsonArray) {
+            #if($fld.adderMethod)
+                JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new BiConsumer<String, ${fld.type.simpleName}>() {
+
+                  @Override
+                  public void accept(String key, ${fld.type.simpleName} value) {
+                    obj.${fld.adderMethod}(key, value);
+                  }
+                  
+                });
+            #else
+                obj.${fld.setterMethod}(JsonHelper.fromJsonArray((IJsonArray)json.getValue("${fld.mappingName}"), ${fld.type.simpleName}.class, new HashMap<String, ${fld.type.simpleName}>()));
+            #end
+##            } else {
+##                obj.${fld.setterMethod}(null);
+##            }
+#end
+
+#macro(valueFieldToJson $fld)
+#if($fld.mappingProperties)
+     if (obj.${fld.getterMethod}() != null) {
+        ${fld.type.simpleName} info = obj.${fld.getterMethod}();
+#if($fld.isArray())
+            IJsonArray jsArray = JsonHelper.toJsonArray(${fld.type.componentType.simpleName}.class, info, value -> {
+            		if(value == null) {
+            			return null;
+            		}
+            		IJsonObject result = IJsonObject.newJsonObject();
+#foreach($prop in $fld.mappingProperties) 
+                JsonHelper.toJsonObject(result, value.${prop.getterMethod}(), "${prop.mappingName}", ${prop.type.simpleName}.class, null);
+#end    
+            		return result;
+            });
+            json.put("provinces", jsArray);
+#else
+        	IJsonObject jsonObj = IJsonObject.newJsonObject();
+#foreach($prop in $fld.mappingProperties) 
+        JsonHelper.toJsonObject(jsonObj, info.${prop.getterMethod}(), "${prop.mappingName}", ${prop.type.simpleName}.class, null);
+#end    
+        json.put("${fld.mappingName}", jsonObj);
+#end
+     }
+#elseif($fld.isEnum())
+    if(obj.${fld.getterMethod}() != null) {
+        json.put("${fld.mappingName}", obj.${fld.getterMethod}().name());
+    }
+#elseif($fld.isDate())
+    if(obj.${fld.getterMethod}() != null) {
+        json.put("${fld.mappingName}", obj.${fld.getterMethod}().getTime());
+    }
+#elseif($fld.isJsonifiable())
+    if(obj.${fld.getterMethod}() != null) {
+        JsonHelper.toJsonObject(json, obj.${fld.getterMethod}(), "${fld.mappingName}", ${fld.type.simpleName}.class, null);
+    }
+#else
+#if($fld.isArray() && !$fld.isByteArray())
+#if(${helper.getPrimitiveArrayToJsonMethod(${fld.type})})
+	json.put("${fld.mappingName}", JsonHelper.${helper.getPrimitiveArrayToJsonMethod(${fld.type})}(obj.${fld.getterMethod}()));
+#else
+	json.put("${fld.mappingName}", JsonHelper.toJsonArray(${fld.type.componentType.simpleName}.class, obj.${fld.getterMethod}(), null));
+#end
+#else
+#if($fld.isPrimitive())
+    json.put("${fld.mappingName}", obj.${fld.getterMethod}());
+#else
+    if(obj.${fld.getterMethod}() != null) {
+        json.put("${fld.mappingName}", obj.${fld.getterMethod}());
+    }
+#end    
+#end
+#end
+#end

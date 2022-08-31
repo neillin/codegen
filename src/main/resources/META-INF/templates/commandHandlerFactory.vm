@@ -1,0 +1,65 @@
+package ${model.pkgName};
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.thwt.core.annotation.Generated;
+import com.thwt.core.annotation.ServiceProvider;
+import com.thwt.core.command.api.Command;
+import com.thwt.core.command.api.CommandException;
+import com.thwt.core.command.api.CommandHandler;
+import com.thwt.core.command.api.CommandHandlerFactory;
+#foreach($stmt in $model.imports)
+import $stmt;
+#end
+#foreach($stmt in $model.staticImports)
+import $stmt;
+#end
+
+/**
+ * Auto generated code, do not modify !
+ *
+ */
+@Generated
+@ServiceProvider(CommandHandlerFactory.class)
+public class ${model.name} implements CommandHandlerFactory {
+
+	@SuppressWarnings("rawtypes")
+	private Map<String, CommandHandler> handlers = new HashMap<>();
+	private Context context;
+	
+	{
+ #foreach($mod in $model.handlers)
+        handlers.put("${mod.commandName}", new ${mod.simpleName}());
+ #end
+	}
+	
+    @Override
+	public void init(Context ctx) {
+		this.context = ctx;
+		for(String name : handlers.keySet()) {
+			ctx.registerCommandNames(name);
+		}
+	}
+	
+	@Override
+	public void destroy() {
+		if(this.context != null) {
+			for(String name : handlers.keySet()) {
+				this.context.unregisterCommandNames(name);
+			}
+			this.context = null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public CommandHandler<?, ?> createHandler(String cmdName) {
+		if(handlers.containsKey(cmdName)) {
+			return handlers.get(cmdName);
+		}else {
+			 throw new CommandException(404, "Unkown command :"+cmdName);
+		}
+	}
+	
+}

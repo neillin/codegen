@@ -1,0 +1,17 @@
+new AbstractServiceInjectionPoint<${model.targetClassName}>(${model.targetClassName}.class, ${model.optional}) {
+	
+	  @Override
+	  protected void injectValue(${model.targetClassName} value) {
+	    ${model.generateInjectStatement('targetObject','value')};
+	  }
+	
+	  @Override
+	  protected void uninjectValue() {
+	    ${model.generateInjectStatement('targetObject','null')};
+	  }
+	  
+	  @Override
+	  public String toString() {
+	    return "Injection point of [${model.target.targetObject.name}] in module :"+getModuleId();
+	  }
+	};

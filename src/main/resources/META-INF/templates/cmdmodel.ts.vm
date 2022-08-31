@@ -1,0 +1,16 @@
+
+#foreach($imp in $model.tsExternalImports)
+${imp};
+#end
+
+#foreach($mod in $model.models)
+export interface ${mod.typeInfo.typescriptName} {
+#if($mod.toProperties)
+#foreach($fld in $mod.toProperties)
+    ${fld.name}?: ${fld.typescriptName};
+#end	
+#end
+}
+
+
+#end

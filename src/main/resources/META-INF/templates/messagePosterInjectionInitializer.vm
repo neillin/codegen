@@ -1,0 +1,39 @@
+new AbstractInjectionPoint<MessageChannel<${clazz}>>(MessageChannel.Helper.ofClass(${clazz}.class)) {
+	
+	      @Override
+      protected MessageChannel<${clazz}> getValue(final InjectionContext context,
+          final Class<MessageChannel<${clazz}>> clazz) {
+        Supplier<EventBus> evtBus = new Supplier<EventBus>() {
+
+              @Override
+              public EventBus get() {
+                return ((VertxKernelContext)context.getKernelContext()).getVertx().eventBus();
+              }
+           };
+		MessageChannelImpl<${clazz}> value = new MessageChannelImpl<${clazz}>(evtBus,${clazz}.class);
+#if($channel)
+        value.setChannel("${channel.value()}").setRemoteChannel(${channel.remoteChannel()}).setRemoteDeviceId("${channel.remoteDeviceId()}");
+#end
+#if($headers)
+#foreach($hd in $headers)
+		value.addHeader("${hd.name()}","${hd.value()}");
+#end
+#end
+		return value;
+      }
+	
+	  @Override
+	  protected void injectValue(MessageChannel<${clazz}> value) {
+	    ${model.generateInjectStatement('targetObject','value')};
+	  }
+	
+	  @Override
+	  protected void uninjectValue() {
+	    ${model.generateInjectStatement('targetObject','null')};
+	  }
+	  
+	  @Override
+	  public String toString() {
+	    return "Injection point of [${model.target.targetObject.name}] in module :"+getModuleId();
+	  }
+	};

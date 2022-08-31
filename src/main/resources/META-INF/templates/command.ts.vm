@@ -1,0 +1,59 @@
+
+import { Command } from '@thwt/ngx-common';
+
+#foreach($imp in $model.tsExternalImports)
+${imp};
+#end
+
+#if($model.tsImportClasses)
+import { ${model.tsImportClasses} } from '../models/wefixd.model';
+#end
+
+
+#foreach($mod in $model.commands)
+export class ${mod.name} extends Command<${mod.commandReturnTypeInfo.typescriptName}> {
+    name = '${mod.commandName}';
+#if($mod.fromProperties)
+#foreach($fld in $mod.tsClientProperties)
+    ${fld.name}?: ${fld.typescriptName};
+#end	
+#end
+
+    toJsonObject(): any {
+       let result:any = { };
+#if($mod.fromProperties)
+#foreach($fld in $mod.tsClientProperties)
+       if(this.${fld.name}) {
+           result['${fld.name}'] = this.${fld.name};
+       }
+#end	
+#end
+        return result;
+    }
+    
+
+    fromJsonObject(result: any): void {
+#if($mod.fromProperties)
+#foreach($fld in $mod.tsClientProperties)
+       if(result['${fld.name}']) {
+           this.${fld.name} = result['${fld.name}'];
+       }
+#end	
+#end
+    }
+    
+#if($mod.fromProperties)
+#foreach($fld in $mod.tsClientProperties)
+    ${fld.setter}(value: ${fld.typescriptName}): ${mod.name} {
+        this.${fld.name} = value;
+        return this;
+    }
+    
+#end	
+#end
+}
+
+
+
+#end
+

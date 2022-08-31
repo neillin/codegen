@@ -1,0 +1,87 @@
+import 'package:thwt_core/core.dart';
+
+#set ( $d = "$")
+
+#foreach($imp in $model.dartExternalImports)
+${imp};
+#end
+
+#foreach($mod in $model.interfaceModels)
+abstract class ${mod.typeInfo.dartName} ${mod.dartImplements} {
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+    ${fld.typeName} get ${fld.name};
+#end
+#end
+}
+
+#end
+
+#foreach($mod in $model.jsonizableModels)
+class ${mod.typeInfo.dartName} implements Jsonizable<${mod.typeInfo.dartName}> ${mod.dartInterfaces} {
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+    final ${fld.typeName} ${fld.name};
+#end
+ 
+    const ${mod.typeInfo.dartName}({
+#foreach($fld in $mod.toDartProperties)
+      this.${fld.name},
+#end
+    });
+    	
+#end
+
+#if($mod.toDartNullProperties)
+#foreach($fld in $mod.toDartNullProperties)
+    ${fld.typeName} get ${fld.name} => null;
+#end
+#end
+
+
+  @override
+  ${mod.typeInfo.dartName} fromJson(Map<String, dynamic> json) {
+    return ${mod.typeInfo.dartName}(
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+      ${fld.name}: $fld.fromJsonStatement,
+#end
+#end
+    );
+  }
+
+  @override
+  Map<String, dynamic > toJson() {
+    return <String, dynamic>{
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+      '${fld.name}': $fld.toJsonStatement,
+#end
+#end
+    };
+  }
+  
+ ${mod.typeInfo.dartName} copyWith({
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+    ${fld.typeName} ${fld.name},
+#end
+#end
+  }) => ${mod.typeInfo.dartName}(
+#if($mod.toDartProperties)
+#foreach($fld in $mod.toDartProperties)
+      ${fld.name}: ${fld.name}??this.${fld.name},
+#end
+#end
+    );
+    
+    
+  @override
+  String toString() {
+    return '${mod.typeInfo.dartName}{ #foreach($fld in $mod.toDartProperties) ${fld.name}: ${d}${fld.name} #end }';
+  }  
+
+}
+
+
+#end

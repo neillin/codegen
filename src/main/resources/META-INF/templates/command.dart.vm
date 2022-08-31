@@ -1,0 +1,85 @@
+import 'dart:async';
+import 'package:thwt_core/core.dart';
+
+#set ( $d = "$")
+
+#foreach($imp in $model.dartExternalImports)
+${imp};
+#end
+
+#if($model.dartImportClasses)
+import 'models.dart';
+#end
+
+
+#foreach($mod in $model.commands)
+class ${mod.name} extends Command<${mod.commandReturnTypeInfo.dartName}> ${mod.dartImplements} {
+    @override
+    final name = '${mod.commandName}';
+#if($mod.dartClientProperties)
+#foreach($fld in $mod.dartClientProperties)
+    final ${fld.typeName} ${fld.name};
+#end	
+#end
+
+#if($mod.dartNullProperties)
+#foreach($fld in $mod.dartNullProperties)
+    ${fld.typeName} get ${fld.name} => null;
+#end	
+#end
+
+
+  ${mod.name}({
+#if($mod.dartClientProperties)
+#foreach($fld in $mod.dartClientProperties)
+    this.${fld.name},
+#end	
+#end
+  	String transactionId, 
+  	String commandId
+  }): super(transactionId: transactionId, commandId: commandId);
+
+  @override
+  ${mod.name} fromJson(Map<String, dynamic> json) {
+    return ${mod.name}(
+#if($mod.dartClientProperties)
+#foreach($fld in $mod.dartClientProperties)
+        ${fld.name}: $fld.fromJsonStatement,
+#end	
+#end
+        transactionId: json['transactionId'],
+        commandId: json['commandId']
+    );
+  }
+
+  @override
+  FutureOr<${mod.commandReturnTypeInfo.dartName}> getResult(json) {
+    return ${mod.returnValueFromJsonStatement};
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'commandName': name,
+      'commandId': commandId,
+      'transactionId': transactionId,
+#if($mod.dartClientProperties)
+#foreach($fld in $mod.dartClientProperties)
+      '${fld.name}': $fld.toJsonStatement,
+#end	
+#end
+    };
+  }
+  
+  @override
+  String toString() {
+    return '${mod.name}{ #foreach($fld in $mod.dartClientProperties) ${fld.name}: ${d}${fld.name} #end }';
+  }  
+  
+
+}
+
+
+
+#end
+
